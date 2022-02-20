@@ -9,7 +9,14 @@ import secrets
 from functools import wraps
 from flask_cors import CORS
 import pandas as pd
+# from pyngrok import ngrok
 
+# Open a HTTP tunnel on the default port 80
+# <NgrokTunnel: "http://<public_sub>.ngrok.io" -> "http://localhost:80">
+# http_tunnel = ngrok.connect()
+# Open a SSH tunnel
+# <NgrokTunnel: "tcp://0.tcp.ngrok.io:12345" -> "localhost:22">
+# ssh_tunnel = ngrok.connect(22, "tcp")
 
 app = Flask(__name__)
 app.secret_key = "sgdfsgfsgfdgfgdgfgfdgsdf"
@@ -59,13 +66,23 @@ def is_logged_in(f):
 
 @app.route('/') 
 def index():
-    return render_template("index.html")
+    if "flag" in session:
+        if session["flag"] == 1:
+            session["order_id"] = 0
+            return render_template("index.html")
+        else:
+            message = "Can't log out"
+            print(message)
+            return redirect(url_for("menu"))
+    else:
+        return render_template("index.html")
 
 @app.route('/checkout') 
 def checkout():
     cart_dict = session["cart"]["products"]
     cart = []
     total = 0
+    # print(session["order_id"])
     for product_id in list(cart_dict.keys()):
         pro = db.child("menu").child(product_id).get().val()
         cart.append({
@@ -93,12 +110,13 @@ def remove_from_cart(product_id):
 def confirm_order():
     if session["type"] == "admin":
         return render_template("admin_order.html")
+
     else:
         cart_dict = session["cart"]["products"]
         cart = []
         print("HI_CONFIRM_ORDER")
         users = db.child("users").order_by_child("type").equal_to("tab").get().val()
-
+        orders = db.child("orders").get().val()
 
         for product_id in list(cart_dict.keys()):
             pro = db.child("menu").child(product_id).get().val()
@@ -111,31 +129,55 @@ def confirm_order():
                 "category": pro.get("category"),
             })
 
-            
+        if session["order_id"] != 0:
+            order_id = session["order_id"]  
+            orders = db.child("orders").get().val()
+            for i in orders.keys():
+                if orders[i]["order_no"] == session["order_id"] and orders[i]["name"] == session["name"]:
+                    curr = i
 
-        order_id = randint(1, 99999)
-        cart.append({
-            "entry_fee": session["service_charge"]
-        })
-        total = session["service_charge"]
-        if session["cart"]["cart_total"] > session["service_charge"]:
-            total += session["cart"]["cart_total"] - session["service_charge"]
-        if session["type"] == "tab":
-            data = {
-                "name": session["name"],
-                "phone": session["phone"],
-                "order_no": order_id,
-                "order": cart,
-                "total": total,
-                'location': session["location"],
-                "start_time": session["start_time"],
-                "status": "OPEN",
-                "table": session["table"],
-                "type": session["type"]
-            }
-            data.update({"quantity": session["quantity"]})
+            curr_order = db.child("orders").child(curr).get().val()
+            print(session["cart"])
+            for item in cart:
+                curr_order["order"].append(item)
+            db.child("orders").child(curr).child("order").set(curr_order["order"])
+            total = 0
+            ci_flag = 0
+            ci_total = 0
+            for item in curr_order["order"]:
+                if "amount" in item:
+                    if "Cigarette" in item["category"]:
+                        ci_flag = 1
+                        ci_total = item["amount"]
+                    total += item["amount"]
+            total = total - ci_total
+            # print(total)
+            # curr_total = total + session["cart"]["cart_total"]
+            # print(total)
+            # if "Cigarette" in curr_order
+            session_charge = session["quantity"] * 100
+            print(session_charge)
+            if total < session_charge:
+                total = session_charge
+            total += ci_total
+            print(total)
+            db.child("orders").child(curr).child("total").set(total)
+            # print
+
+        else:     
+            total = session["service_charge"]
+            if session["cart"]["cart_total"] > session["service_charge"]:
+                total += session["cart"]["cart_total"] - session["service_charge"]
 
             for u in users.keys():
+                for i in orders.keys():
+                    if users[u]["phone"] == orders[i]["phone"]:
+                        order = db.child("orders").child(i).child("order").get().val()
+                        order.append(cart)
+                        db.child("orders").child(i).child("order").set(order)
+                        db.child("orders").child(i).child("total").set(total)
+
+            if session["type"] == "tab":
                 if users[u]["type"] == "tab" and users[u]["phone"] == session["phone"]:
                     total_total1 = db.child("users").child(u).child("total_total").get().val()
                     total_total = total_total1 + total
@@ -147,23 +189,26 @@ def confirm_order():
                     except Exception as e:
                         print(e)
 
-        else:
-            data = {
-                "name": session["name"],
-                "order_no": order_id,
-                "order": cart,
-                "total": total,
-                'location': session["location"],
-                "start_time": session["start_time"],
-                "status": "OPEN",
-                "table": session["table"],
-                "type": session["type"]
-            }
-            data.update({"quantity": session["quantity"]})
+            # else:
+                # data = {
+                #     "name": session["name"],
+                #     "order_no": session["order_id"],
+                #     "order": cart,
+                #     "total": total,
+                #     'location': session["location"],
+                #     "start_time": session["start_time"],
+                #     "status": "OPEN",
+                #     "table": session["table"],
+                #     "type": session["type"]
+                # }
+                # data.update({"quantity": session["quantity"]})
         
-        res = db.child("orders").push(data)
-        print(res)
+            # res = db.child("orders").push(data)
+            # print(res)
+
         flash("Order placed", "success")
+        # session["order_id"] = order_id
+        session["flag"] = 1
             
         return redirect(url_for("total_total"))
 
@@ -172,6 +217,9 @@ def total_total():
     print("HI_TOTAL TOTAL")
     cart_dict = session["cart"]["products"]
     date = session["start_time"].split(" ")[0]
+    print(session["start_time"])
+    print(type(session["start_time"]))
+    print(date)
     orders = db.child("orders").order_by_child("type").equal_to("tab").get().val()
     users = db.child("users").order_by_child("type").equal_to("tab").get().val()
 
@@ -201,8 +249,13 @@ def total_total():
 
     session["cart"] = {"products": {}, "cart_total": 0}
     session["service_charge"] = 0
-    session["name"] = "admin"
-    session["phone"] = 0
+    print(session["name"])
+    # print(session["order_id"])
+    print(session["phone"])
+
+    if session["type"] == "admin":
+        session["phone"] = 0
+        session["name"] = 'admin'
     
     return redirect(url_for("menu"))
 
@@ -210,7 +263,7 @@ def total_total():
 def add_product(order_id):
     all_order = dict(db.child("orders").child(order_id).get().val())
     orders = all_order["order"] 
-    print(all_order)
+    # print(all_order)
     pro = {
         "name": "Cigarettes",
         "amount": 20,
@@ -269,6 +322,9 @@ def checkin():
             "start_time": start_time
         }
         results = db.child("users").push(data)
+        order_id = randint(1, 99999)  
+        session["order_id"] = order_id
+        session["flag"] = 0
         session["name"] = name
         session["phone"] = phone
         # session["id"] = results["name"]
@@ -279,6 +335,28 @@ def checkin():
         session["start_time"] = start_time
         session["type"] = "customer"
         session["service_charge"] = 100 * quantity
+        
+        cart = []
+        cart.append({
+        "entry_fee": session["service_charge"]
+        })  
+
+        data = {
+            "name": session["name"],
+            "phone": session["phone"],
+            "order_no": session["order_id"],
+            "order": cart,
+            "total": session["service_charge"],
+            'location': session["location"],
+            "start_time": session["start_time"],
+            "status": "OPEN",
+            "table": session["table"],
+            "type": session["type"]
+        }
+        data.update({"quantity": session["quantity"]})
+
+        db.child("orders").push(data)
+        
         return redirect(url_for('menu'))
 
 
@@ -303,11 +381,11 @@ def manage_tabs():
         totals = {}
         for phone in all_users:
             for user in users.keys():
-                print(user)
+                # print(user)
                 if users[user]["phone"] == phone:
                     totals[phone] = users[user]["total_total"]
 
-        print(totals)
+        # print(totals)
         # for phone in all_users:
         #     userdata = db.child("users").child(u).get().val()
 
@@ -332,19 +410,19 @@ def change_total(customer):
             if orders[order]["phone"] == phone:
                 customers[phone] = orders[order]["name"]
 
-    print(customer)
+    # print(customer)
     data = request.form.get("dep")
-    print(data)
+    # print(data)
     users = db.child("users").order_by_child("type").equal_to("tab").get().val()
 
     for u in users.keys():
         if users[u]["phone"] == customer:
             customer_id = u
     
-    print(customer_id)
+    # print(customer_id)
     
     tot = db.child("users").child(customer_id).child("total_total").get().val()
-    print(tot)
+    # print(tot)
     total_total = tot-data
 
     db.child("users").child(customer_id).update({"total_total": total_total})
@@ -382,7 +460,7 @@ def manage_menu():
 
 @app.route("/delete_menu/<id>")
 def delete_menu(id):
-    print(id)
+    # print(id)
     res = db.child("menu").child(id).remove()
     flash("Deleted successfully", "success")
     return jsonify({
@@ -401,11 +479,14 @@ def login():
         quantity = int(request.form['quantity'])
         start_time = request.form['start_time']
         user = db.child("users").order_by_child("phone").equal_to(phone).get().val()
-        print(user)
+        # print(user)
         u = list(dict(user).values())[0]
         # print(u["phone"])
         # print(u["password"])
         if phone == u["phone"] and password == u["password"]:
+            order_id = randint(1, 99999)  
+            session["order_id"] = order_id
+            session["flag"] = 0
             session["logged_in"] = True
             session["phone"] = phone
             session['type'] = 'tab'
@@ -427,6 +508,27 @@ def login():
             session["quantity"] = quantity
             session["start_time"] = start_time
             session["service_charge"] = 100 * quantity
+
+            cart = []
+            cart.append({
+            "entry_fee": session["service_charge"]
+            })  
+
+            data = {
+                "name": session["name"],
+                "phone": session["phone"],
+                "order_no": session["order_id"],
+                "order": cart,
+                "total": session["service_charge"],
+                'location': session["location"],
+                "start_time": session["start_time"],
+                "status": "OPEN",
+                "table": session["table"],
+                "type": session["type"]
+            }
+            data.update({"quantity": session["quantity"]})
+
+            db.child("orders").push(data)
             return redirect(url_for('menu'))
         else:
            flash("Couldn't login! Try Again :(", "danger") 
@@ -482,13 +584,20 @@ def admin_login():
 @is_admin
 def dashboard():
     orders = db.child("orders").order_by_child("status").equal_to("OPEN").get().val()
+    # print(orders.keys())
+    # for i in orders.keys():
+    #     print (orders[i]["order"])
+
     return render_template("dashboard.html", orders=orders)
 
 
 @app.route('/checkout_order/<string:order_id>', methods=['GET', 'POST'])
 def checkout_order(order_id):
     order = db.child("orders").child(order_id).update({"status": "CLOSED"})
-    print(order)
+    # print(order)
+    # print(session["phone"])
+    # print(session["name"])
+    # print(session["order_id"])
     return redirect(url_for("dashboard"))
 
 
@@ -552,11 +661,11 @@ def view_sales():
         date = request.form.get("date")
         # print(date)
         sale = db.child("sales").child(date).get().val()
-        print(sale)
+        # print(sale)
 
         return render_template("sales.html", sales = sales, sale = sale, date= date)
     else:
-        print(sales.keys())
+        # print(sales.keys())
         return render_template("sales.html", sales = sales)
 
 @app.route('/delete_order/<string:id>')
@@ -675,6 +784,7 @@ def logout():
 @app.route('/add_to_cart/<string:product_id>')
 def add_to_cart(product_id):
     item  = db.child("menu").child(product_id).get().val()
+    # if "cigarette" in item.values():
     if "cart" in session:
         product_dict = session["cart"]["products"]
         if product_id in product_dict:
@@ -753,7 +863,8 @@ def add_new_order():
     data1.update({"quantity": 0})
     print(data1)
     res = db.child("orders").push(data1)
-
+    # session["order_id"] = order_id
+    # print(order_id)
     print(res)
     flash("Order placed", "success")
 
