@@ -871,5 +871,5 @@ def add_new_order():
     return redirect(url_for("total_total"))
     
 if __name__ == '__main__':
-    app.run(debug=True, port=7001)
+   app.run(debug=True, port = int(os.environ.get('PORT', 5000)))
     
