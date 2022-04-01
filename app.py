@@ -11,6 +11,7 @@ from functools import wraps
 from flask_cors import CORS
 import pandas as pd
 from collections import OrderedDict
+import pytz
 # from pyngrok import ngrok
 
 # Open a HTTP tunnel on the default port 80
@@ -25,6 +26,8 @@ app.secret_key = "sgdfsgfsgfdgfgdgfgfdgsdf"
 app.permanent_session_lifetime = timedelta(minutes=120)
 
 CORS(app)
+
+IST = pytz.timezone('Asia/Kolkata')
 
 #Connecting Database to app 
 firebaseConfig = {
@@ -127,7 +130,7 @@ def confirm_order():
         users = db.child("users").order_by_child("type").equal_to("tab").get().val()
         orders = db.child("orders").order_by_child("start_time").get().val()
 
-        order_date = datetime.now()
+        order_date = datetime.now(IST)
         order_date = order_date.strftime("%d/%m/%Y %I:%M %p")
 
         for product_id in list(cart_dict.keys()):        
@@ -284,7 +287,7 @@ def add_product(order_id):
         amt = int(amt)
     all_order = dict(db.child("orders").child(order_id).get().val())
     orders = all_order["order"] 
-    now = datetime.now()
+    now = datetime.now(IST)
     now = now.strftime("%d/%m/%Y %I:%M %p")
     order_id_min = randint(1, 99999)
     menu = db.child('menu').order_by_child('name').equal_to('Cigarette').get().key()
@@ -342,7 +345,7 @@ def checkin():
         start_time = request.form['start_time']
         session.permanent = True
         print(start_time)
-        now = datetime.now()
+        now = datetime.now(IST)
         now = now.strftime("%d/%m/%Y %I:%M %p")
         data = {
             "name": name,
@@ -371,7 +374,7 @@ def checkin():
         if '-' in string:
             str = string.replace('-', '/')
         session["start_time"] = str
-        now = datetime.now()
+        now = datetime.now(IST)
         now = now.strftime("%d/%m/%Y %I:%M %p")
         cart = []
         cart.append({
@@ -557,7 +560,7 @@ def login():
                     # print(string)
                     str = string.replace('-', '/')
                 session["start_time"] = string
-                now = datetime.now()
+                now = datetime.now(IST)
                 now = now.strftime("%d/%m/%Y %I:%M %p")
                 cart = []
                 cart.append({
@@ -892,7 +895,7 @@ def add_new_order():
     cart = []
     
     order_id_min = randint(1, 99999)
-    order_date = datetime.now()
+    order_date = datetime.now(IST)
     order_date = order_date.strftime("%d/%m/%Y %I:%M %p")
 
     for product_id in list(cart_dict.keys()):
@@ -908,12 +911,12 @@ def add_new_order():
             "category": pro.get("category"),
         })   
 
-    # # time = datetime.now()
+    # # time = datetime.now(IST)
     # print(session["start_time"])
     # sesh_time = session["start_time"].strftime("%d/%m/%Y %I:%M %p")
     # session["start_time"] = sesh_time
 
-    now = datetime.now()
+    now = datetime.now(IST)
     now = now.strftime("%d/%m/%Y %I:%M %p")
 
     order_id = randint(1, 99999)
@@ -926,7 +929,7 @@ def add_new_order():
     if session["cart"]["cart_total"] > session["service_charge"]:
         total += session["cart"]["cart_total"] - session["service_charge"]
 
-    start_time = datetime.now()
+    start_time = datetime.now(IST)
     
     dt_string = start_time.strftime("%d/%m/%Y %I:%M %p")
     session["start_time"] = dt_string
@@ -951,8 +954,6 @@ def add_new_order():
     flash("Order placed", "success")
 
     return redirect(url_for("total_total"))
-      
-if __name__ == '__main__':
-       app.run(debug=True, port = int(os.environ.get('PORT', 5000)))
-
     
+if __name__ == '__main__':
+    app.run(debug=True, port=7001)
