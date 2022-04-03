@@ -1,0 +1,93 @@
+{% extends "layout.html" %} {% block body %} {% include "includes/message.html"
+%}
+
+<div class="row">
+    {% if details %}
+    <div class="col-4" id = "printer">
+      <div class="card m-2 overflow-scroll" style="height: 20rem">
+        <div class="card-body">
+          <h5 class="card-title">
+              <h5> Words and Sips </h5>
+              <hr>
+             <b>Order No. </b>  {{details.order_no}} <br>
+             <b>Name: </b> {{details.name}} <br>
+             <b>Entry: </b> {{details.start_time}} <br>
+             <b>Location: </b> {{details.location | capitalize}}
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Item</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">1</th>
+                <td>{{order.name}}</td>
+                <td>&nbsp;&nbsp;&nbsp;{{order.quantity}}</td>
+                <td>{{order.amount}}</td>
+                    <td>
+                  <a href="{{url_for('delete_order', id=id, item_id=order.order_id)}}">
+                  <button id="crossSign" class="btn text-danger">&cross;</button>
+              </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="text-right">Total: &#8377; {{order.amount}}</div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-primary" onclick="printDiv()">
+            <a 
+            class="text-white text-decoration-none"
+            href="{{url_for('dashboard')}}">
+              Print
+            </a>
+
+          </button>
+          <button class="btn btn-success">
+            <a
+              class="text-white text-decoration-none"
+              href="{{url_for('checkout_order', order_id=id)}}"
+              >Checkout
+            </a>
+          </button>
+          <form action="{{url_for('add_product', order_id=id)}}" method="post">
+            <input name="cigsamt" id="cigsamt" type="number" size="3" maxlength="3" style="width: 80px;">
+          <a
+            class="text-black text-decoration-none"
+            href="{{url_for('add_product', order_id=id)}}"
+          >
+            <button class="btn btn-outline-secondary">&plus;</button>
+          </a>
+        </form>
+        </div>
+      </div>
+    </div>
+    {% else %} <span class="ms-2">No orders to display!</span> {%
+    endif %}
+  </div>
+  
+  {% endblock %} {% block scripts %}
+  
+  <script>
+    setInterval(() => {
+      setInterval(location.reload(), 1000);
+    }, 30000);
+    function printDiv() {
+      var printContents = document.getElementById("printer");
+      var cardFooter = printContents.getElementsByClassName("card-footer")[0];
+      var crossSign = document.getElementById("crossSign");
+      crossSign.remove();
+      cardFooter.remove();
+      w = window.open();
+      w.document.write(printContents.innerHTML);
+      w.print();
+      w.close();
+    }
+
+
+</script>
+
+{% endblock %}
