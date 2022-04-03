@@ -2,7 +2,7 @@
 %}
 
 <h3>Recent orders</h3>
-<hr />
+<hr>
 
 <div class="row">
   {% if orders %} {% for id in orders.keys() %}
@@ -10,9 +10,12 @@
     <div class="card m-2 overflow-scroll" style="height: 20rem">
       <div class="card-body">
         <h5 class="card-title">
-          Order No. {{orders[id].order_no}} | {{orders[id].name}} |
-          {{orders[id].start_time}} | Table {{orders[id].table}} |
-          {{orders[id].location | capitalize}}
+          <h5> Words and Sips </h5>
+              <hr>
+             <b>Order No. </b>  {{orders[id].order_no}} <br>
+             <b>Name: </b> {{orders[id].name}} <br>
+             <b>Entry: </b> {{orders[id].start_time}} <br>
+             <b>Location: </b> {{orders[id].location | capitalize}}
         </h5>
         <table class="table">
           <thead>
@@ -29,19 +32,23 @@
             <tr>
               <th scope="row">{{loop.index}}</th>
               <td>Entry Fee</td>
-              <td>{{orders[id].quantity}}</td>
+              <td>&nbsp;&nbsp;&nbsp;{{orders[id].quantity}}</td>
               <td>{{item.entry_fee}}</td>
             </tr>
             {% else %}
             <tr>
               <th scope="row">{{loop.index}}</th>
               <td>{{item.name}}</td>
-              <td>{{item.quantity}}</td>
+              <td>&nbsp;&nbsp;&nbsp;{{item.quantity}}</td>
               <td>{{item.amount}}</td>
-		<td>
+		          <td>
                 <a href="{{url_for('delete_order', id=id, item_id=item.order_id)}}">
-                <button class="btn text-danger">&cross;</button>
+                <button id="crossSign" class="btn text-danger">&cross;</button>
             </td>
+            <td>
+              <a href="{{url_for('print_order', id=id, item_id = item.order_id)}}">
+              <button id="printIcon" style="font-size:16px" class="btn dark"><i class="fa fa-print"></i></button>
+          </td>
             </tr>
             {% endif %} {% endfor %}
           </tbody>
@@ -78,12 +85,17 @@
 {% endblock %} {% block scripts %}
 
 <script>
-  setInterval(() => {
+    setInterval(() => {
     setInterval(location.reload(), 1000);
   }, 30000);
+
   function printDiv(divName) {
     var printContents = document.getElementById(divName);
     var cardFooter = printContents.getElementsByClassName("card-footer")[0];
+    var crossSign = document.getElementById("crossSign");
+    var printIcon = document.getElementById("printIcon");
+    crossSign.remove();
+    printIcon.remove();
     cardFooter.remove();
     w = window.open();
     w.document.write(printContents.innerHTML);
@@ -91,26 +103,7 @@
     w.close();
   }
 
-  const $staffSelect = document.getElementById('page')
-
-  $staffSelect.onchange = function () {
-    console.log("CHANGED")
-    print("CHANGED")
-    const message = "New Order";
-  }
-
-  // function showFlashMessage(element) {
-  //   var event = new CustomEvent('showFlashMessage');
-  //   element.dispatchEvent(event);
-  // };
-
-  // var flashMessages = document.getElementsByClassName('js-flash-message');
-  // document.onchange = function() {
-  //   console.log("CHANGED");
-  // }
-  //show first flash message avilable in your page
-  // showFlashMessage("You have a new order!", "success");
-  // showFlashMessage(flashMessages[0]);
 </script>
 
 {% endblock %}
+
