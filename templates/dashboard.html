@@ -41,14 +41,15 @@
               <td>{{item.name}}</td>
               <td>&nbsp;&nbsp;&nbsp;{{item.quantity}}</td>
               <td>{{item.amount}}</td>
+		    <td>
+              <a href="{{url_for('print_order', id=id, item_id = item.order_id)}}">
+              <button id="printIcon" style="font-size:16px" class="btn dark"><i class="fa fa-print"></i></button>
+          </td>
 		          <td>
                 <a href="{{url_for('delete_order', id=id, item_id=item.order_id)}}">
                 <button id="crossSign" class="btn text-danger">&cross;</button>
             </td>
-            <td>
-              <a href="{{url_for('print_order', id=id, item_id = item.order_id)}}">
-              <button id="printIcon" style="font-size:16px" class="btn dark"><i class="fa fa-print"></i></button>
-          </td>
+            
             </tr>
             {% endif %} {% endfor %}
           </tbody>
