@@ -1,9 +1,11 @@
 from ast import arg
-from datetime import datetime, date, timedelta
+import datetime
+from datetime import datetime, date, timedelta, time
 # import imp
 from random import randint
 import os
 from re import S
+from xmlrpc.client import NOT_WELLFORMED_ERROR
 from flask  import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
 import pyrebase
 import secrets
@@ -276,8 +278,9 @@ def total_total():
     if session["type"] == "admin":
         session["phone"] = 11111111
         session["name"] = 'admin'
-    
-    return redirect(url_for("menu"))
+        return redirect(url_for('dashboard'))
+    else:
+        return redirect(url_for("menu"))
 
 @app.route('/add_product/<string:order_id>', methods=["POST"])
 def add_product(order_id):
@@ -662,8 +665,9 @@ def dashboard():
             orders[order]['start_time'] = datetime.strptime(string, '%d/%m/%Y %I:%M %p')
         
         orders = OrderedDict(sorted(orders.items(), key=lambda kv: datetime.strptime(kv[1]['order'][-1]['order_time'], '%d/%m/%Y %I:%M %p'), reverse=True))
-
-    return render_template("dashboard.html", orders=orders)
+    session_time = time(2,0,0)
+    now = datetime.now(IST).time()
+    return render_template("dashboard.html", orders=orders, session_time=session_time, now=now)
 
 
 @app.route('/checkout_order/<string:order_id>', methods=['GET', 'POST'])
@@ -911,6 +915,11 @@ def add_new_order():
             "category": pro.get("category"),
         })   
 
+    # # time = datetime.now(IST)
+    # # # print(session["start_time"])
+    # sesh_time = session["start_time"].strftime("%d/%m/%Y %I:%M %p")
+    # session["start_time"] = sesh_time
+
     now = datetime.now(IST)
     now = now.strftime("%d/%m/%Y %I:%M %p")
 
@@ -941,14 +950,21 @@ def add_new_order():
         "type": session["type"]
     }
     data1.update({"quantity": 0})
+    # # # print(data1)
     res = db.child("orders").push(data1)
+    # session["order_id"] = order_id
+    # # # print(order_id)
+    # # # print(res)
     flash("Order placed", "success")
 
     return redirect(url_for("total_total"))
 
 @app.route('/print_order/<string:id>/<int:item_id>')
 def print_order(id, item_id):
+    # print(id)
+    # print(item_id)
     orders = db.child('orders').get().val()
+    # print(orders[id])
     all_order = orders[id]['order']
     for i in all_order:
         if 'order_id' in i:
