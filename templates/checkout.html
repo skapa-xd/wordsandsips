@@ -47,10 +47,10 @@
                 </div>
                 <div class="col">
                   <div class="row">
-                    <div class="col mt-2">
+                    <div class="col m-0 p-0">
                       {% if item.quantity==1 %}
                       <span
-                        class="text-black text-decoration-none disabled"
+                        class="text-black text-decoration-none disabled m-0 p-0"
                         style="cursor: pointer"
                       >
                         &minus;
@@ -59,20 +59,18 @@
                       <a
                         class="text-black text-decoration-none disabled"
                         href="{{url_for('update_product_quantity', product_id=item.product_id, quantity=item.quantity-1)}}"
-                      >
-                        &minus;
+                      >&minus;
                       </a>
                       {% endif %}
                     </div>
-                    <div class="col">
-                      <span class="border p-3 m-0"> {{item.quantity}} </span>
+                    <div class="col m-0 p-0">
+                      <span class="border p-1 m-0"> {{item.quantity}} </span>
                     </div>
-                    <div class="col mt-2">
+                    <div class="col m-0 p-0">
                       <a
                         class="text-black text-decoration-none"
                         href="{{url_for('update_product_quantity', product_id=item.product_id, quantity=item.quantity+1)}}"
-                      >
-                        &plus;
+                      >&plus;
                       </a>
                     </div>
                   </div>
