@@ -7,8 +7,12 @@
       <div class="card m-2 overflow-scroll" style="height: 20rem">
         <div class="card-body">
           <h5 class="card-title">
+            <p>
               <h5> Words and Sips </h5>
-              <hr>
+              <h6> Book Cafe <br>
+                FC Road Pune </h6>
+            </p>
+            <hr>
              <b>Name: </b> {{details.name}} <br>
              <b>Phone: </b> {{details.phone}} <br>
              <b>Entry: </b> {{details.start_time}} <br>
@@ -23,7 +27,11 @@
               </tr>
             </thead>
             <tbody>
+              {%if order.print == 0 %}
+              <tr id="tablerow" style=" color: red;">
+              {%else%}
               <tr>
+                {%endif%}
                 <th scope="row">1</th>
                 <td>{{order.name}}</td>
                 <td>&nbsp;&nbsp;&nbsp;{{order.quantity}}</td>
@@ -36,6 +44,10 @@
             </tbody>
           </table>
           <div class="text-right">Total: &#8377; {{order.amount}}</div>
+          <p>
+            <h6>We Serve Coffee, Books and Love <br>
+              Please give us 15-20 mins to serve you :) </h6>
+          </p>
         </div>
         <div class="card-footer">
           <button class="btn btn-primary" onclick="printDiv()">
@@ -72,9 +84,11 @@
   {% endblock %} {% block scripts %}
   
   <script>
-    setInterval(() => {
+
+  setInterval(() => {
       setInterval(location.reload(), 1000);
     }, 30000);
+
     function printDiv() {
       var printContents = document.getElementById("printer");
       var cardFooter = printContents.getElementsByClassName("card-footer")[0];
@@ -86,7 +100,6 @@
       w.print();
       w.close();
     }
-
 
 </script>
 
