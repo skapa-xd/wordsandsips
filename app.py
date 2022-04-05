@@ -130,7 +130,6 @@ def confirm_order():
     else:
         cart_dict = session["cart"]["products"]
         cart = []
-        # # # print("HI_CONFIRM_ORDER")
         users = db.child("users").order_by_child("type").equal_to("tab").get().val()
         orders = db.child("orders").order_by_child("start_time").get().val()
 
@@ -145,6 +144,7 @@ def confirm_order():
                 "order_id": order_id_min,
                 "order_time": order_date,
                 "product_id": product_id,
+                "print": 0,
                 "name": pro.get("name"),
                 "quantity": int(cart_dict[product_id]),
                 "amount": amount,
@@ -159,7 +159,6 @@ def confirm_order():
                     curr = i
 
             curr_order = db.child("orders").child(curr).get().val()
-            # # # print(session["cart"])
             for item in cart:
                 curr_order["order"].append(item)
             db.child("orders").child(curr).child("order").set(curr_order["order"])
@@ -173,18 +172,11 @@ def confirm_order():
                         ci_total = item["amount"]
                     total += item["amount"]
             total = total - ci_total
-            # # # print(total)
-            # curr_total = total + session["cart"]["cart_total"]
-            # # # print(total)
-            # if "Cigarette" in curr_order
             session_charge = session["quantity"] * 100
-            # # # print(session_charge)
             if total < session_charge:
                 total = session_charge
             total += ci_total
-            # # # print(total)
             db.child("orders").child(curr).child("total").set(total)
-            # print
 
         else:     
             total = session["service_charge"]
@@ -203,7 +195,6 @@ def confirm_order():
                 if users[u]["type"] == "tab" and users[u]["phone"] == session["phone"]:
                     total_total1 = db.child("users").child(u).child("total_total").get().val()
                     total_total = total_total1 + total
-                    # # # print(total_total)
                     userdata = db.child("users").child(u).get().val()
                     userdata.update({"total_total": total_total})
                     try:
@@ -271,10 +262,6 @@ def total_total():
 
     session["cart"] = {"products": {}, "cart_total": 0}
     session["service_charge"] = 0
-    # print(session["name"])
-    # # print(session["order_id"])
-    # print(session["phone"])
-
     if session["type"] == "admin":
         session["phone"] = 11111111
         session["name"] = 'admin'
@@ -296,14 +283,14 @@ def add_product(order_id):
     now = now.strftime("%d/%m/%Y %I:%M %p")
     order_id_min = randint(1, 99999)
     menu = db.child('menu').order_by_child('name').equal_to('Cigarette').get().key()
-    # # print(menu)
-    # # # print(all_order)
+
     pro = {
         "name": "Cigarettes",
         "amount": amt * 20,
         "quantity": amt,
         "order_time": now,
-        "order_id": order_id_min
+        "order_id": order_id_min,
+        "print": 1
     }
     for order in orders:
         if order.get("name") == "Cigarettes":
@@ -371,14 +358,10 @@ def checkin():
         session['table'] = table
         session["cart"] = {"products": {}, "cart_total":0}
         session["quantity"] = quantity
-        session["start_time"] = start_time
+        session["start_time"] = now
         session["type"] = "customer"
         session["service_charge"] = 100 * quantity
 
-        string = session['start_time']
-        if '-' in string:
-            str = string.replace('-', '/')
-        session["start_time"] = str
         now = datetime.now(IST)
         now = now.strftime("%d/%m/%Y %I:%M %p")
         cart = []
@@ -631,42 +614,44 @@ def admin_login():
         admin = db.child("admin").get().val()
 
         if email == admin["email"] and password == admin["password"]:
+            session["new_order"] = {"order_user": ' ', "data": []}
             session["logged_in"] = True
             session["email"] = email
             session['type'] = 'admin'
             session["phone"] = 11111111
-            
 
             # # # print('password matched')
             return redirect(url_for('dashboard'))
     
     return render_template("admin_login.html")
 
-# gflag = 0
 
-# def stream_handler(message):
-#     # session["gflag"] = gflag
-#     # # # print(message["event"]) # put
-#     # flash("You have a new order", "success")
-#     # # # print(message["path"])
-#     return message
+def stream_handler(message):
+    print(message["event"]) # put
+    print(type(message['path']))
+    print(message["path"])
+    if message["path"] != "/":
+        session["new_order"]["order_user"] = message["path"].split("/")[-1]
+
 
 @app.route('/admin/dashboard', methods=['GET', 'POST'])
 @is_admin
 def dashboard():
-    orders = db.child("orders").order_by_child("status").equal_to("OPEN").get().val()
-    if orders:
-        for order in orders:
-            string = orders[order]['start_time']
+    orders1 = db.child("orders").order_by_child("status").equal_to("OPEN").get().val()
+    if orders1:
+        for order in orders1:
+            string = orders1[order]['start_time']
             if '-' in string:
                 strg = string.replace('-', '/')
                 string = strg
 
-            orders[order]['start_time'] = datetime.strptime(string, '%d/%m/%Y %I:%M %p')
+            orders1[order]['start_time'] = datetime.strptime(string, '%d/%m/%Y %I:%M %p')
         
-        orders = OrderedDict(sorted(orders.items(), key=lambda kv: datetime.strptime(kv[1]['order'][-1]['order_time'], '%d/%m/%Y %I:%M %p'), reverse=True))
+        orders = OrderedDict(sorted(orders1.items(), key=lambda kv: datetime.strptime(kv[1]['order'][-1]['order_time'], '%d/%m/%Y %I:%M %p'), reverse=True))
+
     session_time = time(2,0,0)
     now = datetime.now(IST).time()
+
     return render_template("dashboard.html", orders=orders, session_time=session_time, now=now)
 
 
@@ -909,6 +894,7 @@ def add_new_order():
             "order_id": order_id_min,
             "order_time": order_date,
             "product_id": product_id,
+            "print": 0,
             "name": pro.get("name"),
             "quantity": int(cart_dict[product_id]),
             "amount": amount,
@@ -961,16 +947,19 @@ def add_new_order():
 
 @app.route('/print_order/<string:id>/<int:item_id>')
 def print_order(id, item_id):
-    # print(id)
-    # print(item_id)
     orders = db.child('orders').get().val()
-    # print(orders[id])
     all_order = orders[id]['order']
     for i in all_order:
         if 'order_id' in i:
             if i['order_id'] == item_id:
                 details = orders[id]
                 order = i
+
+    item = db.child("orders").child(id).child("order").order_by_child("order_id").equal_to(item_id).get().val()
+    for i in item.keys():
+        item[i]["print"] = 1
+    
+    db.child("orders").child(id).child("order").order_by_child("order_id").equal_to(item_id).update(item)
 
     return render_template("print_order.html", order = order, details = details)
     
