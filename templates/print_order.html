@@ -27,11 +27,7 @@
               </tr>
             </thead>
             <tbody>
-              {%if order.print == 0 %}
-                <tr id="tablerow" style=" color: #FF00FF;">
-              {%else%}
-              <tr>
-                {%endif%}
+            <tr>
                 <th scope="row">1</th>
                 <td>{{order.name}}</td>
                 <td>&nbsp;&nbsp;&nbsp;{{order.quantity}}</td>
