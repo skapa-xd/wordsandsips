@@ -652,7 +652,7 @@ def dashboard():
     session_time = time(2,0,0)
     now = datetime.now(IST).time()
 
-    return render_template("dashboard.html", orders=orders, session_time=session_time, now=now)
+    return render_template("dashboard.html", orders=orders)
 
 
 @app.route('/checkout_order/<string:order_id>', methods=['GET', 'POST'])
