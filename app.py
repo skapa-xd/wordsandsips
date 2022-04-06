@@ -637,17 +637,17 @@ def stream_handler(message):
 @app.route('/admin/dashboard', methods=['GET', 'POST'])
 @is_admin
 def dashboard():
-    orders1 = db.child("orders").order_by_child("status").equal_to("OPEN").get().val()
-    if orders1:
-        for order in orders1:
-            string = orders1[order]['start_time']
+    orders = db.child("orders").order_by_child("status").equal_to("OPEN").get().val()
+    if orders:
+        for order in orders:
+            string = orders[order]['start_time']
             if '-' in string:
                 strg = string.replace('-', '/')
                 string = strg
 
-            orders1[order]['start_time'] = datetime.strptime(string, '%d/%m/%Y %I:%M %p')
+            orders[order]['start_time'] = datetime.strptime(string, '%d/%m/%Y %I:%M %p')
         
-        orders = OrderedDict(sorted(orders1.items(), key=lambda kv: datetime.strptime(kv[1]['order'][-1]['order_time'], '%d/%m/%Y %I:%M %p'), reverse=True))
+        orders = OrderedDict(sorted(orders.items(), key=lambda kv: datetime.strptime(kv[1]['order'][-1]['order_time'], '%d/%m/%Y %I:%M %p'), reverse=True))
 
     session_time = time(2,0,0)
     now = datetime.now(IST).time()
