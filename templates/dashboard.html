@@ -41,20 +41,20 @@
             %}
             <tr>
               <th scope="row">{{loop.index}}</th>
-              <td>Entry Fee</td>
-              <td>&nbsp;&nbsp;&nbsp;{{orders[id].quantity}}</td>
-              <td>{{item.entry_fee}}</td>
+              <td> <b>Entry Fee</b> </td>
+              <td> <b> &nbsp;&nbsp;&nbsp;{{orders[id].quantity}}</b></td>
+              <td> <b> {{item.entry_fee}}</b></td>
             </tr>
             {% else %}
             {%if item.print == 0 %}
-            <tr id="tablerow" style=" color: red;">
+            <tr id="tablerow" style=" color: red; ">
             {%else%}
             <tr>
               {%endif%}
               <th scope="row">{{loop.index}}</th>
-              <td>{{item.name}}</td>
-              <td>&nbsp;&nbsp;&nbsp;{{item.quantity}}</td>
-              <td>{{item.amount}}</td>
+              <td><b>{{item.name}}</b></td>
+              <td><b>&nbsp;&nbsp;&nbsp;{{item.quantity}}</b></td>
+              <td><b>{{item.amount}}</b></td>
               <td>
                 <a href="{{url_for('print_order', id=id, item_id = item.order_id)}}">
                 <button id="printIcon" style="font-size:16px" class="btn dark"><i class="fa fa-print"></i></button>
