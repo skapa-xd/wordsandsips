@@ -11,13 +11,16 @@
     <div class="card m-2 overflow-scroll" style="height: 20rem">
       <div class="card-body"> 
         <h6 class="card-title">
-          <p>
-            <b>Order No. </b>  {{orders[id].order_no}} <br>
+          {% if orders[id].order_no in prints %}
+          <p style="color: red;">
+            {%else%}
+            <p>      
+          {%endif%}
             <b>Name: </b> {{orders[id].name}} <br>
             <b>Phone: </b> {{orders[id].phone}} <br>
             <b>Entry: </b> {{orders[id].start_time}} <br>
             <b>Location: </b> {{orders[id].location | capitalize}}
-          </p>    
+          </p> 
         </h6>
         <table class="table">
           <thead>
@@ -78,6 +81,13 @@
             >Checkout
           </a>
         </button>
+        <a
+          class="text-black text-decoration-none" 
+          href="{{url_for('new_order', id = id)}}">
+          <button class="btn btn-outline-secondary">
+            Add Order
+          </button>
+        </a>
         <form action="{{url_for('add_product', order_id=id)}}" method="post">
           <input name="cigsamt" id="cigsamt" type="number" size="3" maxlength="3" style="width: 80px;">
         <a
@@ -87,7 +97,7 @@
           <button class="btn btn-outline-secondary">&plus;</button>
         </a>
       </form>
-      </div>
+    </div>
     </div>
   </div>
   {% endfor %} {% else %} <span class="ms-2">No orders to display!</span> {% endif %}
