@@ -28,17 +28,9 @@ app = Flask(__name__)
 app.secret_key = "sgdfsgfsgfdgfgdgfgfdgsdf"
 app.permanent_session_lifetime = timedelta(minutes=120)
 
-app.config.update(
-    SESSION_COOKIE_SECURE=True,
-)
-
 CORS(app)
 
 IST = pytz.timezone('Asia/Kolkata')
-
-@app.before_request
-def setup():
-    session.permanent = True
 
 #Connecting Database to app 
 firebaseConfig = {
