@@ -1,0 +1,110 @@
+{% extends "layout.html" %} {% block body %} {% include "includes/message.html"
+%}
+
+<div class="row">
+    {% if details %}
+    <div class="col-4" id = "printer">
+      <div class="card m-2 overflow-scroll" style="height: 20rem">
+        <div class="card-body">
+          <h5 class="card-title">
+            <p>
+              <h5> Words and Sips </h5>
+              <h6> Book Cafe <br>
+                FC Road Pune </h6>
+            </p>
+            <hr>
+             <b>Name: </b> {{details.name}} <br>
+             <b>Phone: </b> {{details.phone}} <br>
+             <b>Entry: </b> {{details.start_time}} <br>
+             <b>Location: </b> {{details.location | capitalize}}
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Item</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Price</th>
+              </tr>
+            </thead>
+            {% for item in order %} {% if 'entry_fee' in item.keys()
+            %}
+            <tr>
+              <th scope="row">{{loop.index}}</th>
+              <td>Entry Fee</td>
+              <td>&nbsp;&nbsp;&nbsp;{{order.quantity}}</td>
+              <td>{{item.entry_fee}}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <th scope="row">{{loop.index}}</th>
+              <td>{{item.name}}</td>
+              <td>&nbsp;&nbsp;&nbsp;{{item.quantity}}</td>
+              <td>{{item.amount}}</td>
+            </tr>
+            {% endif %} {% endfor %}
+          </tbody>  
+        </table>
+        <div class="text-right">Total: &#8377; {{details.total}}</div>
+          <center>
+            <p>
+                <h6> 
+                    We Serve Coffee, Books and Love <br>
+                  Please give us 15-20 mins to serve you :) </h6>
+              </p>
+          </center>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-primary" onclick="printDiv()">
+            <a 
+            class="text-white text-decoration-none"
+            href="{{url_for('dashboard')}}">
+              Print
+            </a>
+
+          </button>
+          <button class="btn btn-success">
+            <a
+              class="text-white text-decoration-none"
+              href="{{url_for('checkout_order', order_id=id)}}"
+              >Checkout
+            </a>
+          </button>
+          <form action="{{url_for('add_product', order_id=id)}}" method="post">
+            <input name="cigsamt" id="cigsamt" type="number" size="3" maxlength="3" style="width: 80px;">
+          <a
+            class="text-black text-decoration-none"
+            href="{{url_for('add_product', order_id=id)}}"
+          >
+            <button class="btn btn-outline-secondary">&plus;</button>
+          </a>
+        </form>
+        </div>
+      </div>
+    </div>
+    {% else %} <span class="ms-2">No orders to display!</span> {%
+    endif %}
+  </div>
+  
+  {% endblock %} {% block scripts %}
+  
+  <script>
+
+  setInterval(() => {
+      setInterval(location.reload(), 1000);
+    }, 30000);
+
+    function printDiv() {
+        console.log("ENTERED FUNCTION")
+      var printContents = document.getElementById("printer");
+      var cardFooter = printContents.getElementsByClassName("card-footer")[0];
+      var crossSign = document.getElementById("crossSign");
+      cardFooter.remove();
+      w = window.open();
+      w.document.write(printContents.innerHTML);
+      w.print();
+      w.close();
+    }
+
+</script>
+
+{% endblock %}
