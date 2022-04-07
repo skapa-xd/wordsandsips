@@ -108,8 +108,6 @@ def checkout():
     else:
         flash("Your session has expired", "danger")
         return render_template("checkout.html", cart=cart, total=total)
-    
-
 
 
 @app.route('/remove_from_cart/<string:product_id>')
@@ -579,33 +577,6 @@ def login():
 
     return render_template("login.html")
 
-# @app.route('/tab_checkin', methods=['GET', 'POST'])
-# def tab_checkin():
-#     if request.method == "POST":
-#         location = request.form['location']
-#         table = request.form['table']
-#         quantity = int(request.form['quantity'])
-#         start_time = request.form['start_time']
-#         data = {
-#             "type":'customer',
-#             "location": location,
-#             "table": table,
-#             "quantity": quantity,
-#             "start_time": start_time
-#         }
-#         results = db.child("users").order_by_child("name").equal_to(session["name"]).push(data)
-#         session["id"] = results["name"]
-#         session['location'] = location
-#         session['table'] = table
-#         session["cart"] = {"products": {}, "cart_total":0}
-#         session["quantity"] = quantity
-#         session["start_time"] = start_time
-#         session["service_charge"] = 100 * quantity
-#         return redirect(url_for('menu'))
-
-
-#     return render_template("tab_checkin.html")
-
 @app.route('/admin_login', methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -638,6 +609,7 @@ def stream_handler(message):
 @is_admin
 def dashboard():
     orders = db.child("orders").order_by_child("status").equal_to("OPEN").get().val()
+    
     if orders:
         for order in orders:
             string = orders[order]['start_time']
@@ -649,11 +621,21 @@ def dashboard():
         
         orders = OrderedDict(sorted(orders.items(), key=lambda kv: datetime.strptime(kv[1]['order'][-1]['order_time'], '%d/%m/%Y %I:%M %p'), reverse=True))
 
-    session_time = time(2,0,0)
-    now = datetime.now(IST).time()
-
     return render_template("dashboard.html", orders=orders)
 
+@app.route('/print_orders/<string:id>', methods=['GET', 'POST'])
+def print_orders(id):
+    orders = db.child('orders').get().val()
+    items = orders[id]["order"]
+    details = orders[id]
+    for item in items:
+        # print(item)
+        if "print" in item:
+            item["print"] = 1
+    print(items)
+    db.child("orders").child(id).child("order").set(items)
+            
+    return render_template('print_orders.html', order = items, details=details)
 
 @app.route('/checkout_order/<string:order_id>', methods=['GET', 'POST'])
 def checkout_order(order_id):
