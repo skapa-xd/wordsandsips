@@ -81,13 +81,7 @@
             >Checkout
           </a>
         </button>
-        <a
-          class="text-black text-decoration-none" 
-          href="{{url_for('new_order', id = id)}}">
-          <button class="btn btn-outline-secondary">
-            Add Order
-          </button>
-        </a>
+        
         <form action="{{url_for('add_product', order_id=id)}}" method="post">
           <input name="cigsamt" id="cigsamt" type="number" size="3" maxlength="3" style="width: 80px;">
         <a
