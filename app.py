@@ -608,6 +608,7 @@ def stream_handler(message):
 @app.route('/admin/dashboard', methods=['GET', 'POST'])
 @is_admin
 def dashboard():
+    session["adminflag"] = 0
     orders = db.child("orders").order_by_child("status").equal_to("OPEN").get().val()
     
     if orders:
@@ -621,7 +622,14 @@ def dashboard():
         
         orders = OrderedDict(sorted(orders.items(), key=lambda kv: datetime.strptime(kv[1]['order'][-1]['order_time'], '%d/%m/%Y %I:%M %p'), reverse=True))
 
-    return render_template("dashboard.html", orders=orders)
+    prints = []
+    for order in orders:
+        for item in orders[order]["order"]:
+            if "print" in item:
+                if item["print"] == 0:
+                    prints.append(orders[order]["order_no"])             
+
+    return render_template("dashboard.html", orders=orders, prints = prints)
 
 @app.route('/print_orders/<string:id>', methods=['GET', 'POST'])
 def print_orders(id):
