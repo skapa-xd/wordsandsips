@@ -9,8 +9,12 @@
   {% if orders %} {% for id in orders.keys() %}
   <div class="col-4" id="print_{{id}}">
     <div class="card m-2 overflow-scroll" style="height: 20rem">
-      <div class="card-body"> 
-        <h6 class="card-title">
+      <div class="card-body">
+        {% if now >= orders[id].end_time %}
+        <h6 class="card-title" style="background-color: rgb(32, 230, 32); color: black;">
+          {%else%}
+          <h6 class="card-title">
+            {%endif%}
           {% if orders[id].order_no in prints %}
           <p style="color: red;">
             {%else%}
@@ -56,10 +60,6 @@
                 <a href="{{url_for('print_order', id=id, item_id = item.order_id)}}">
                 <button id="printIcon" style="font-size:16px" class="btn dark"><i class="fa fa-print"></i></button>
             </td>
-		          <td>
-                <a href="{{url_for('delete_order', id=id, item_id=item.order_id)}}">
-                <button id="crossSign" class="btn text-danger">&cross;</button>
-            </td>
             </tr>
             {% endif %} {% endfor %}
           </tbody>
@@ -81,7 +81,13 @@
             >Checkout
           </a>
         </button>
-        
+        <a
+          class="text-black text-decoration-none" 
+          href="{{url_for('new_order', id = id)}}">
+          <button class="btn btn-outline-secondary">
+            Add Order
+          </button>
+        </a>
         <form action="{{url_for('add_product', order_id=id)}}" method="post">
           <input name="cigsamt" id="cigsamt" type="number" size="3" maxlength="3" style="width: 80px;">
         <a
@@ -109,9 +115,9 @@
     var printContents = document.getElementById(divName);
     console.log(divName)
     var cardFooter = printContents.getElementsByClassName("card-footer")[0];
-    var crossSign = document.getElementById("crossSign");
+    // var crossSign = document.getElementById("crossSign");
     var printIcon = document.getElementById("printIcon");
-    crossSign.remove();
+    // crossSign.remove();
     printIcon.remove();
     cardFooter.remove();
     w = window.open();
