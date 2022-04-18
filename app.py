@@ -1,6 +1,7 @@
 from ast import arg
 import datetime
 from datetime import datetime, date, timedelta, time
+import imp
 from random import randint
 import os
 from re import S
@@ -63,6 +64,11 @@ def is_logged_in(f):
 
 @app.route('/') 
 def index():
+    if "name" in session:
+        return redirect(url_for("menu")) 
+    else:
+        return render_template("index.html")
+
     if "flag" in session:
         if session["flag"] == 1:
             session["order_id"] = 0
@@ -220,7 +226,8 @@ def total_total():
 
 
     session["cart"] = {"products": {}, "cart_total": 0}
-    session["service_charge"] = 0
+    session["service_charge"] = 0   
+
     if session["type"] == "admin":
         session["phone"] = 11111111
         session["name"] = 'admin'
@@ -295,6 +302,9 @@ def checkin():
         session.permanent = True
         now = datetime.now(IST)
         now = now.strftime("%d/%m/%Y %I:%M %p")
+        end_time = datetime.now(IST) + timedelta(hours=2)
+        end_time = end_time.strftime("%d/%m/%Y %I:%M %p")
+
         data = {
             "name": name,
             "phone": phone,
@@ -302,7 +312,7 @@ def checkin():
             "location": location,
             "table": table,
             "quantity": quantity,
-            "start_time": now
+            "start_time": now,
         }
         results = db.child("users").push(data)
         order_id = randint(1, 99999)  
@@ -336,7 +346,8 @@ def checkin():
             "start_time": now,
             "status": "OPEN",
             "table": session["table"],
-            "type": session["type"]
+            "type": session["type"],
+            "end_time": end_time
         }
         data.update({"quantity": session["quantity"]})
 
@@ -550,12 +561,15 @@ def dashboard():
                 string = strg
 
             orders[order]['start_time'] = datetime.strptime(string, '%d/%m/%Y %I:%M %p')
-        for order in orders.keys():
-            for i in orders[order]["order"]:
-                print(i["order_time"])
+        
         orders = OrderedDict(sorted(orders.items(), key=lambda kv: datetime.strptime(kv[1]['order'][-1]['order_time'], '%d/%m/%Y %I:%M %p'), reverse=True))
 
-    
+    now = datetime.now(IST)
+    now = now.strftime("%d/%m/%Y %I:%M %p")
+    print("now")
+    print(now)
+    for order in orders.keys():
+        print(orders[order]["end_time"])
 
     prints = []
     for order in orders:
@@ -564,7 +578,7 @@ def dashboard():
                 if item["print"] == 0:
                     prints.append(orders[order]["order_no"])             
 
-    return render_template("dashboard.html", orders=orders, prints = prints)
+    return render_template("dashboard.html", orders=orders, prints = prints, now=now)
 
 @app.route('/print_orders/<string:id>', methods=['GET', 'POST'])
 def print_orders(id):
