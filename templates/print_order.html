@@ -27,15 +27,11 @@
               </tr>
             </thead>
             <tbody>
-            <tr>
+              <tr>
                 <th scope="row">1</th>
                 <td>{{order.name}}</td>
                 <td>&nbsp;&nbsp;&nbsp;{{order.quantity}}</td>
                 <td>{{order.amount}}</td>
-                    <td>
-                  <a href="{{url_for('delete_order', id=id, item_id=order.order_id)}}">
-                  <button id="crossSign" class="btn text-danger">&cross;</button>
-              </td>
               </tr>
             </tbody>
           </table>
@@ -88,8 +84,8 @@
     function printDiv() {
       var printContents = document.getElementById("printer");
       var cardFooter = printContents.getElementsByClassName("card-footer")[0];
-      var crossSign = document.getElementById("crossSign");
-      crossSign.remove();
+      // var crossSign = document.getElementById("crossSign");
+      // crossSign.remove();
       cardFooter.remove();
       w = window.open();
       w.document.write(printContents.innerHTML);
