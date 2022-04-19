@@ -302,8 +302,6 @@ def checkin():
         session.permanent = True
         now = datetime.now(IST)
         now = now.strftime("%d/%m/%Y %I:%M %p")
-        end_time = datetime.now(IST) + timedelta(hours=2)
-        end_time = end_time.strftime("%d/%m/%Y %I:%M %p")
 
         data = {
             "name": name,
@@ -330,6 +328,10 @@ def checkin():
 
         now = datetime.now(IST)
         now = now.strftime("%d/%m/%Y %I:%M %p")
+        
+        end_time = datetime.now(IST) + timedelta(hours=2)
+        end_time = end_time.strftime("%d/%m/%Y %I:%M %p")
+
         cart = []
         cart.append({
             "entry_fee": session["service_charge"],
@@ -491,6 +493,9 @@ def login():
                 session["start_time"] = string
                 now = datetime.now(IST)
                 now = now.strftime("%d/%m/%Y %I:%M %p")
+
+                end_time = datetime.now(IST) + timedelta(hours=2)
+                end_time = end_time.strftime("%d/%m/%Y %I:%M %p")
                 cart = []
                 cart.append({
                     "entry_fee": session["service_charge"],
@@ -507,7 +512,8 @@ def login():
                     "start_time": now,
                     "status": "OPEN",
                     "table": session["table"],
-                    "type": session["type"]
+                    "type": session["type"],
+                    "end_time": end_time
                 }
                 data.update({"quantity": session["quantity"]})
 
@@ -854,6 +860,10 @@ def add_new_order():
         start_time = datetime.now(IST)
         
         dt_string = start_time.strftime("%d/%m/%Y %I:%M %p")
+        
+        end_time = datetime.now(IST) + timedelta(hours=2)
+        end_time = end_time.strftime("%d/%m/%Y %I:%M %p")
+
         session["start_time"] = dt_string
         data1 = {
             "name": session["name"],
@@ -865,7 +875,8 @@ def add_new_order():
             "start_time": dt_string,
             "status": "OPEN",
             "table": "None",
-            "type": session["type"]
+            "type": session["type"],
+            "end_time": end_time
         }
 
         data1.update({"quantity": 0})
